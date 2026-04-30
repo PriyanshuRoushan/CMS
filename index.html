@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMS — Interconnection & Workflow Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Clash+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #07090f;
+  --grid: rgba(255,255,255,0.025);
+  --surface: #0e1118;
+  --surface2: #151923;
+  --border: #1e2535;
+  --border2: #2a3347;
+
+  --admin: #f97316;
+  --admin-glow: rgba(249,115,22,0.2);
+  --teacher: #8b5cf6;
+  --teacher-glow: rgba(139,92,246,0.2);
+  --student: #06b6d4;
+  --student-glow: rgba(6,182,212,0.15);
+
+  --att: #10b981;
+  --hostel: #f59e0b;
+  --outpass: #ec4899;
+  --marks: #6366f1;
+  --leave: #14b8a6;
+  --section: #84cc16;
+  --notify: #f97316;
+  --db: #64748b;
+  --auth: #e2e8f0;
+
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* animated grid bg */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+}
+
+.page { position:relative; z-index:1; padding: 32px 24px 80px; max-width:1400px; margin:0 auto; }
+
+/* ── HEADER ── */
+.header {
+  text-align:center;
+  padding: 48px 20px 36px;
+  position:relative;
+}
+.header::after {
+  content:'';
+  position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  width:200px; height:1px;
+  background: linear-gradient(90deg, transparent, var(--student), transparent);
+}
+.badge {
+  display:inline-flex; align-items:center; gap:8px;
+  border:1px solid var(--border2);
+  background: var(--surface);
+  padding:5px 14px; border-radius:2px;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--student); margin-bottom:20px;
+}
+.badge-dot { width:6px; height:6px; border-radius:50%; background:var(--student); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+h1 {
+  font-family:'Clash Display', var(--mono);
+  font-size: clamp(22px,4vw,46px);
+  font-weight:700;
+  letter-spacing:-1px;
+  line-height:1.1;
+  color:#fff;
+  margin-bottom:10px;
+}
+h1 span { color:var(--student); }
+.sub { font-size:12px; color:var(--muted); letter-spacing:1px; }
+
+/* ── LEGEND ── */
+.legend {
+  display:flex; flex-wrap:wrap; gap:12px; justify-content:center;
+  margin: 28px 0 40px;
+}
+.leg { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--muted); }
+.leg-sq { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+.leg-line { width:20px; height:2px; border-radius:1px; }
+.leg-dash { width:20px; height:2px; background:repeating-linear-gradient(90deg,#666 0,#666 4px,transparent 4px,transparent 8px); }
+
+/* ── SECTION LABEL ── */
+.slabel {
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:20px;
+  display:flex; align-items:center; gap:12px;
+}
+.slabel::before { content:''; width:24px; height:1px; background:var(--border2); }
+.slabel::after  { content:''; flex:1;    height:1px; background:var(--border2); }
+
+/* ════════════════════════════════
+   SECTION 1 — ROLE ENTRY FLOWS
+════════════════════════════════ */
+.entry-flow {
+  display:grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap:0;
+  margin-bottom:48px;
+  align-items:start;
+}
+.role-col { display:flex; flex-direction:column; gap:10px; }
+.role-header {
+  border-radius:6px 6px 0 0;
+  padding:12px 16px;
+  font-size:12px; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+  border:1px solid transparent;
+  border-bottom:none;
+}
+.role-header.adm { background:rgba(249,115,22,0.12); border-color:rgba(249,115,22,0.3); color:var(--admin); }
+.role-header.tch { background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3); color:var(--teacher); }
+.role-header.stu { background:rgba(6,182,212,0.12);  border-color:rgba(6,182,212,0.3);  color:var(--student); }
+
+.role-body {
+  border-radius:0 0 6px 6px;
+  border:1px solid var(--border);
+  border-top:none;
+  background:var(--surface);
+  padding:12px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.step-item {
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:4px;
+  padding:8px 10px;
+  font-size:11px;
+  position:relative;
+  transition: border-color .2s, transform .2s;
+  cursor:default;
+}
+.step-item:hover { transform:translateX(3px); }
+.step-num {
+  width:18px; height:18px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:700; flex-shrink:0;
+}
+.adm .step-item:hover { border-color:rgba(249,115,22,0.4); }
+.adm .step-num { background:rgba(249,115,22,0.2); color:var(--admin); }
+.tch .step-item:hover { border-color:rgba(139,92,246,0.4); }
+.tch .step-num { background:rgba(139,92,246,0.2); color:var(--teacher); }
+.stu .step-item:hover { border-color:rgba(6,182,212,0.4); }
+.stu .step-num { background:rgba(6,182,212,0.15); color:var(--student); }
+
+.divider-col {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 0 10px;
+  padding-top:50px;
+}
+.div-line { width:1px; flex:1; background:var(--border); }
+.div-arrow { color:var(--muted); font-size:18px; }
+
+/* ════════════════════════════════
+   SECTION 2 — CORE ARCHITECTURE
+════════════════════════════════ */
+.arch-wrap {
+  position:relative;
+  margin-bottom:48px;
+}
+
+/* SVG canvas for arrows */
+.arch-svg {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:0;
+  overflow:visible;
+}
+
+.arch-layout {
+  display:grid;
+  grid-template-rows: auto auto auto auto;
+  gap:0;
+  position:relative; z-index:1;
+}
+
+/* Auth Gate */
+.auth-gate {
+  display:flex; justify-content:center;
+  margin-bottom:32px;
+}
+.auth-node {
+  background:linear-gradient(135deg, #1e2535, #0e1118);
+  border:1px solid #334155;
+  border-radius:8px;
+  padding:14px 28px;
+  text-align:center;
+  position:relative;
+  min-width:200px;
+}
+.auth-node::after {
+  content:'';
+  position:absolute; bottom:-32px; left:50%;
+  transform:translateX(-50%);
+  width:1px; height:32px;
+  background:linear-gradient(180deg, #334155, transparent);
+}
+.auth-title { font-size:13px; font-weight:700; color:var(--auth); margin-bottom:4px; }
+.auth-sub { font-size:10px; color:var(--muted); }
+.auth-badge {
+  position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+  background:var(--bg); border:1px solid #334155;
+  padding:2px 10px; border-radius:10px;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+  white-space:nowrap;
+}
+
+/* Router */
+.router-row {
+  display:flex; justify-content:center;
+  gap:16px;
+  margin-bottom:32px;
+  position:relative;
+}
+.router-row::before {
+  content:'';
+  position:absolute; top:50%;
+  left:10%; right:10%;
+  height:1px;
+  background:var(--border2);
+  z-index:0;
+}
+.router-node {
+  border-radius:6px; padding:10px 18px;
+  font-size:11px; font-weight:700;
+  text-align:center; position:relative; z-index:1;
+  min-width:120px;
+  cursor:default;
+  transition: transform .2s, box-shadow .2s;
+}
+.router-node:hover { transform:translateY(-3px); }
+.rn-admin  { background:rgba(249,115,22,0.15); border:1px solid rgba(249,115,22,0.35); color:var(--admin); }
+.rn-admin:hover  { box-shadow:0 8px 24px rgba(249,115,22,0.2); }
+.rn-teacher{ background:rgba(139,92,246,0.15); border:1px solid rgba(139,92,246,0.35); color:var(--teacher); }
+.rn-teacher:hover{ box-shadow:0 8px 24px rgba(139,92,246,0.2); }
+.rn-student{ background:rgba(6,182,212,0.1);  border:1px solid rgba(6,182,212,0.3);  color:var(--student); }
+.rn-student:hover{ box-shadow:0 8px 24px rgba(6,182,212,0.15); }
+.rn-icon { font-size:18px; margin-bottom:4px; }
+.rn-label { font-size:10px; }
+
+/* Module grid */
+.modules-row {
+  display:grid;
+  grid-template-columns: repeat(6,1fr);
+  gap:10px;
+  margin-bottom:32px;
+}
+.mod-node {
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+  padding:12px 8px;
+  text-align:center;
+  font-size:11px;
+  cursor:pointer;
+  transition: all .2s;
+  position:relative;
+  overflow:hidden;
+}
+.mod-node::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:2px;
+}
+.mod-node:hover { transform:translateY(-3px); border-color:var(--border2); }
+.mod-icon2 { font-size:20px; margin-bottom:6px; display:block; }
+.mod-name2 { font-size:10px; font-weight:600; margin-bottom:3px; }
+.mod-access { font-size:9px; color:var(--muted); }
+
+.mn-att    { --mc:var(--att); }
+.mn-hostel { --mc:var(--hostel); }
+.mn-out    { --mc:var(--outpass); }
+.mn-marks  { --mc:var(--marks); }
+.mn-leave  { --mc:var(--leave); }
+.mn-sec    { --mc:var(--section); }
+
+.mod-node::before { background:var(--mc, #333); }
+.mod-node:hover { border-color:var(--mc, #333); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+/* DB + Notify row */
+.infra-row {
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap:16px;
+}
+.infra-node {
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+  padding:16px;
+  display:flex; align-items:center; gap:12px;
+}
+.infra-icon { font-size:24px; flex-shrink:0; }
+.infra-name { font-size:12px; font-weight:700; margin-bottom:2px; }
+.infra-desc { font-size:10px; color:var(--muted); }
+
+/* ════════════════════════════════
+   SECTION 3 — WORKFLOW DETAILS
+════════════════════════════════ */
+.workflows {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:16px;
+  margin-bottom:48px;
+}
+.wf-card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+}
+.wf-head {
+  padding:12px 16px;
+  display:flex; align-items:center; gap:10px;
+  border-bottom:1px solid var(--border);
+  font-size:12px; font-weight:700;
+}
+.wf-icon { font-size:16px; }
+.wf-body { padding:16px; }
+.wf-steps { display:flex; flex-direction:column; gap:0; }
+.wf-step {
+  display:flex; gap:12px; align-items:flex-start;
+  position:relative;
+  padding-bottom:16px;
+}
+.wf-step:last-child { padding-bottom:0; }
+.wf-step:not(:last-child)::before {
+  content:'';
+  position:absolute;
+  left:14px; top:28px;
+  width:1px; bottom:0;
+  background:var(--border);
+}
+.wf-dot {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0;
+  border:1px solid var(--border2);
+  background:var(--surface2);
+  position:relative; z-index:1;
+}
+.wf-content { flex:1; }
+.wf-title { font-size:12px; font-weight:600; margin-bottom:2px; }
+.wf-desc  { font-size:11px; color:var(--muted); }
+.wf-tag {
+  display:inline-block;
+  font-size:9px; padding:1px 7px; border-radius:2px;
+  margin-top:4px;
+  text-transform:uppercase; letter-spacing:1px;
+}
+
+/* ════════════════════════════════
+   SECTION 4 — DATA INTERCONNECTIONS
+════════════════════════════════ */
+.interconnect {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:28px;
+  margin-bottom:48px;
+  overflow-x:auto;
+}
+.ic-title { font-size:11px; font-weight:700; margin-bottom:20px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+
+.ic-grid {
+  display:grid;
+  grid-template-columns: repeat(4,1fr);
+  gap:10px;
+  min-width:700px;
+}
+.ic-node {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:12px;
+  text-align:center;
+  font-size:11px;
+  position:relative;
+}
+.ic-node-title { font-weight:700; margin-bottom:6px; }
+.ic-node-fields { font-size:10px; color:var(--muted); display:flex; flex-direction:column; gap:2px; }
+.ic-rel {
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:var(--border2);
+  align-self:center;
+}
+
+/* ════════════════════════════════
+   INTERACTIVE TABS
+════════════════════════════════ */
+.tabs {
+  display:flex; gap:4px; margin-bottom:20px; flex-wrap:wrap;
+}
+.tab {
+  padding:8px 16px; border-radius:4px; cursor:pointer;
+  font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+  border:1px solid var(--border); background:var(--surface); color:var(--muted);
+  transition: all .15s;
+}
+.tab:hover { color:var(--text); border-color:var(--border2); }
+.tab.active { background:var(--surface2); color:var(--student); border-color:rgba(6,182,212,0.4); }
+
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ════════ SIGNAL ANIMATIONS ════════ */
+@keyframes flowRight {
+  0%   { stroke-dashoffset: 100; opacity:0.2; }
+  50%  { opacity:1; }
+  100% { stroke-dashoffset: 0;   opacity:0.2; }
+}
+@keyframes flowDown {
+  0%   { stroke-dashoffset: 60; opacity:0.2; }
+  50%  { opacity:1; }
+  100% { stroke-dashoffset: 0;  opacity:0.2; }
+}
+.flow-line { stroke-dasharray:8 4; stroke-dashoffset:100; animation: flowRight 2s linear infinite; }
+.flow-vert { stroke-dasharray:8 4; stroke-dashoffset:60;  animation: flowDown  2s linear infinite; }
+
+/* fade-in on load */
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.page > * { animation: fadeUp .5s ease both; }
+.page > *:nth-child(2) { animation-delay:.1s; }
+.page > *:nth-child(3) { animation-delay:.2s; }
+.page > *:nth-child(4) { animation-delay:.3s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:800px) {
+  .entry-flow { grid-template-columns:1fr; gap:16px; }
+  .divider-col { display:none; }
+  .modules-row { grid-template-columns:repeat(3,1fr); }
+  .infra-row   { grid-template-columns:1fr; }
+  .workflows   { grid-template-columns:1fr; }
+  .ic-grid     { grid-template-columns:repeat(2,1fr); }
+  .router-row  { flex-wrap:wrap; }
+}
+@media (max-width:500px) {
+  .modules-row { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="badge"><div class="badge-dot"></div>Live Diagram</div>
+  <h1>SMS <span>Interconnection</span><br>& Workflow</h1>
+  <p class="sub">End-to-end data flow · Role routing · Module dependencies</p>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg"><div class="leg-sq" style="background:var(--admin)"></div> Admin</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--teacher)"></div> Teacher</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--student)"></div> Student</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--att)"></div> Attendance</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--hostel)"></div> Hostel</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--outpass)"></div> Outpass</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--marks)"></div> Marks</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--leave)"></div> Leave</div>
+  <div class="leg"><div class="leg-sq" style="background:var(--section)"></div> Section</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('arch')">System Architecture</div>
+  <div class="tab" onclick="switchTab('roles')">Role Entry Flows</div>
+  <div class="tab" onclick="switchTab('workflow')">Module Workflows</div>
+  <div class="tab" onclick="switchTab('data')">Data Interconnections</div>
+</div>
+
+<!-- ══════ TAB 1: ARCHITECTURE ══════ -->
+<div class="tab-content active" id="tab-arch">
+  <div class="slabel">Overall System Architecture Flow</div>
+  <div class="arch-wrap">
+    <div class="arch-layout">
+
+      <!-- Auth Gate -->
+      <div class="auth-gate">
+        <div class="auth-node">
+          <div class="auth-badge">Entry Point</div>
+          <div style="font-size:28px;margin-bottom:6px">🌐</div>
+          <div class="auth-title">Login Portal</div>
+          <div class="auth-sub">JWT Authentication + Role Detection</div>
+          <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+            <span style="font-size:9px;padding:2px 8px;border:1px solid #334155;border-radius:2px;color:#64748b">Email / ID</span>
+            <span style="font-size:9px;padding:2px 8px;border:1px solid #334155;border-radius:2px;color:#64748b">Password</span>
+            <span style="font-size:9px;padding:2px 8px;border:1px solid #334155;border-radius:2px;color:#64748b">Role Select</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Down arrow -->
+      <div style="display:flex;justify-content:center;margin-bottom:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:1px;height:20px;background:var(--border2)"></div>
+          <div style="color:var(--student);font-size:14px">▼</div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:2px">ROLE ROUTER</div>
+        </div>
+      </div>
+
+      <!-- Dashboards -->
+      <div class="router-row">
+        <div class="router-node rn-admin">
+          <div class="rn-icon">🛡️</div>
+          Admin Dashboard
+          <div class="rn-label">Full Control</div>
+        </div>
+        <div class="router-node rn-teacher">
+          <div class="rn-icon">🎓</div>
+          Teacher Dashboard
+          <div class="rn-label">Class Scoped</div>
+        </div>
+        <div class="router-node rn-student">
+          <div class="rn-icon">📚</div>
+          Student Dashboard
+          <div class="rn-label">Self View</div>
+        </div>
+      </div>
+
+      <!-- Down arrow -->
+      <div style="display:flex;justify-content:center;margin-bottom:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:1px;height:20px;background:var(--border2)"></div>
+          <div style="color:var(--muted);font-size:14px">▼</div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:2px">MODULES</div>
+        </div>
+      </div>
+
+      <!-- Modules -->
+      <div class="modules-row">
+        <div class="mod-node mn-att" title="Attendance Module">
+          <span class="mod-icon2">📋</span>
+          <div class="mod-name2">Attendance</div>
+          <div class="mod-access">A · T · S↗</div>
+        </div>
+        <div class="mod-node mn-hostel" title="Hostel Module">
+          <span class="mod-icon2">🏠</span>
+          <div class="mod-name2">Hostel</div>
+          <div class="mod-access">A · S↗</div>
+        </div>
+        <div class="mod-node mn-out" title="Outpass Module">
+          <span class="mod-icon2">🚪</span>
+          <div class="mod-name2">Outpass</div>
+          <div class="mod-access">A · S↑</div>
+        </div>
+        <div class="mod-node mn-marks" title="Marks Module">
+          <span class="mod-icon2">📊</span>
+          <div class="mod-name2">Marks</div>
+          <div class="mod-access">A · T↑ · S↗</div>
+        </div>
+        <div class="mod-node mn-leave" title="Leave Module">
+          <span class="mod-icon2">📅</span>
+          <div class="mod-name2">Leave</div>
+          <div class="mod-access">A · T↑ · S↑</div>
+        </div>
+        <div class="mod-node mn-sec" title="Section Module">
+          <span class="mod-icon2">🏫</span>
+          <div class="mod-name2">Sections</div>
+          <div class="mod-access">A · T↗ · S↗</div>
+        </div>
+      </div>
+
+      <!-- access key -->
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--muted)">↑ = Can create/edit &nbsp;·&nbsp; ↗ = View only &nbsp;·&nbsp; A=Admin &nbsp;·&nbsp; T=Teacher &nbsp;·&nbsp; S=Student</span>
+      </div>
+
+      <!-- Down arrow -->
+      <div style="display:flex;justify-content:center;margin-bottom:12px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="width:1px;height:20px;background:var(--border2)"></div>
+          <div style="color:var(--muted);font-size:14px">▼</div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:2px">INFRASTRUCTURE</div>
+        </div>
+      </div>
+
+      <!-- Infra -->
+      <div class="infra-row">
+        <div class="infra-node">
+          <div class="infra-icon">🗄️</div>
+          <div>
+            <div class="infra-name">PostgreSQL Database</div>
+            <div class="infra-desc">Users · Students · Attendance · Marks · Hostel · Leave · Outpass · Sections</div>
+          </div>
+        </div>
+        <div class="infra-node">
+          <div class="infra-icon">🔔</div>
+          <div>
+            <div class="infra-name">Notification Engine</div>
+            <div class="infra-desc">Email (SendGrid) · SMS (Twilio) · Push Notifications · In-app alerts</div>
+          </div>
+        </div>
+        <div class="infra-node">
+          <div class="infra-icon">☁️</div>
+          <div>
+            <div class="infra-name">Storage & Cache</div>
+            <div class="infra-desc">S3 (documents/photos) · Redis (sessions/queue) · Audit Logs</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TAB 2: ROLE FLOWS ══════ -->
+<div class="tab-content" id="tab-roles">
+  <div class="slabel">Step-by-step role entry & available actions</div>
+  <div class="entry-flow">
+
+    <!-- ADMIN -->
+    <div class="role-col adm">
+      <div class="role-header adm">🛡️ Admin Flow</div>
+      <div class="role-body">
+        <div class="step-item"><div class="step-num">1</div>Login with Admin credentials</div>
+        <div class="step-item"><div class="step-num">2</div>Admin Dashboard overview</div>
+        <div class="step-item"><div class="step-num">3</div>Create Departments, Sections, Academic Year</div>
+        <div class="step-item"><div class="step-num">4</div>Add Faculty & Students to system</div>
+        <div class="step-item"><div class="step-num">5</div>Assign Teachers to subjects/sections</div>
+        <div class="step-item"><div class="step-num">6</div>Configure Hostel blocks & rooms</div>
+        <div class="step-item"><div class="step-num">7</div>Allocate students to hostel rooms</div>
+        <div class="step-item"><div class="step-num">8</div>Review pending leave & outpass requests</div>
+        <div class="step-item"><div class="step-num">9</div>Generate institution-wide reports</div>
+        <div class="step-item"><div class="step-num">10</div>Broadcast announcements & manage fees</div>
+      </div>
+    </div>
+
+    <div class="divider-col"><div class="div-line"></div><div class="div-arrow">⟵⟶</div><div class="div-line"></div></div>
+
+    <!-- TEACHER -->
+    <div class="role-col tch">
+      <div class="role-header tch">🎓 Teacher Flow</div>
+      <div class="role-body">
+        <div class="step-item"><div class="step-num">1</div>Login with Faculty ID</div>
+        <div class="step-item"><div class="step-num">2</div>View assigned subjects & sections</div>
+        <div class="step-item"><div class="step-num">3</div>Mark daily attendance (per period)</div>
+        <div class="step-item"><div class="step-num">4</div>Enter Internal Assessment (IA) marks</div>
+        <div class="step-item"><div class="step-num">5</div>Review leave requests from students</div>
+        <div class="step-item"><div class="step-num">6</div>Approve / Reject leave applications</div>
+        <div class="step-item"><div class="step-num">7</div>View class attendance summary</div>
+        <div class="step-item"><div class="step-num">8</div>View student performance analysis</div>
+        <div class="step-item"><div class="step-num">9</div>Post notice / assignment</div>
+      </div>
+    </div>
+
+    <div class="divider-col"><div class="div-line"></div><div class="div-arrow">⟵⟶</div><div class="div-line"></div></div>
+
+    <!-- STUDENT -->
+    <div class="role-col stu">
+      <div class="role-header stu">📚 Student Flow</div>
+      <div class="role-body">
+        <div class="step-item"><div class="step-num">1</div>Login with Roll No. / ID</div>
+        <div class="step-item"><div class="step-num">2</div>View personal dashboard</div>
+        <div class="step-item"><div class="step-num">3</div>Check attendance % per subject</div>
+        <div class="step-item"><div class="step-num">4</div>View IA & exam marks (semester-wise)</div>
+        <div class="step-item"><div class="step-num">5</div>Submit leave request with documents</div>
+        <div class="step-item"><div class="step-num">6</div>Track leave approval status</div>
+        <div class="step-item"><div class="step-num">7</div>Apply for hostel outpass</div>
+        <div class="step-item"><div class="step-num">8</div>Download approved outpass QR</div>
+        <div class="step-item"><div class="step-num">9</div>View timetable & notice board</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ TAB 3: WORKFLOWS ══════ -->
+<div class="tab-content" id="tab-workflow">
+  <div class="slabel">Detailed module-level approval & data workflows</div>
+  <div class="workflows">
+
+    <!-- ATTENDANCE WORKFLOW -->
+    <div class="wf-card">
+      <div class="wf-head" style="border-left:3px solid var(--att)">
+        <span class="wf-icon">📋</span> Attendance Workflow
+      </div>
+      <div class="wf-body">
+        <div class="wf-steps">
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(16,185,129,0.4);color:var(--att)">T</div>
+            <div class="wf-content">
+              <div class="wf-title">Teacher opens class roster</div>
+              <div class="wf-desc">Selects date, subject, section — student list auto-loads</div>
+              <span class="wf-tag" style="background:rgba(16,185,129,0.1);color:var(--att);border:1px solid rgba(16,185,129,0.2)">Teacher Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(16,185,129,0.4);color:var(--att)">T</div>
+            <div class="wf-content">
+              <div class="wf-title">Mark Present / Absent / Leave</div>
+              <div class="wf-desc">Bulk mark or individual toggle per student</div>
+              <span class="wf-tag" style="background:rgba(16,185,129,0.1);color:var(--att);border:1px solid rgba(16,185,129,0.2)">Teacher Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">🗄</div>
+            <div class="wf-content">
+              <div class="wf-title">Saved to attendance table</div>
+              <div class="wf-desc">Linked to student_id + subject_id + date</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">DB Write</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(249,115,22,0.4);color:var(--admin)">⚡</div>
+            <div class="wf-content">
+              <div class="wf-title">Auto-check attendance threshold</div>
+              <div class="wf-desc">If cumulative % &lt; 75%, trigger parent alert</div>
+              <span class="wf-tag" style="background:rgba(249,115,22,0.1);color:var(--admin);border:1px solid rgba(249,115,22,0.2)">Auto Trigger</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(6,182,212,0.3);color:var(--student)">S</div>
+            <div class="wf-content">
+              <div class="wf-title">Student views updated attendance</div>
+              <div class="wf-desc">Dashboard shows % per subject with colour codes</div>
+              <span class="wf-tag" style="background:rgba(6,182,212,0.08);color:var(--student);border:1px solid rgba(6,182,212,0.2)">Student View</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPASS WORKFLOW -->
+    <div class="wf-card">
+      <div class="wf-head" style="border-left:3px solid var(--outpass)">
+        <span class="wf-icon">🚪</span> Outpass Workflow
+      </div>
+      <div class="wf-body">
+        <div class="wf-steps">
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(236,72,153,0.4);color:var(--outpass)">S</div>
+            <div class="wf-content">
+              <div class="wf-title">Student fills outpass form</div>
+              <div class="wf-desc">Out date/time, return date/time, destination, reason</div>
+              <span class="wf-tag" style="background:rgba(236,72,153,0.1);color:var(--outpass);border:1px solid rgba(236,72,153,0.2)">Student Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">🔔</div>
+            <div class="wf-content">
+              <div class="wf-title">Parent notified via SMS</div>
+              <div class="wf-desc">Auto-SMS to registered parent number on submission</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">Notify</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(249,115,22,0.4);color:var(--admin)">W</div>
+            <div class="wf-content">
+              <div class="wf-title">Warden / Admin reviews request</div>
+              <div class="wf-desc">Views pending queue, checks student record</div>
+              <span class="wf-tag" style="background:rgba(249,115,22,0.1);color:var(--admin);border:1px solid rgba(249,115,22,0.2)">Admin Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">✓</div>
+            <div class="wf-content">
+              <div class="wf-title">Approve → QR Code generated</div>
+              <div class="wf-desc">Status updated; unique QR outpass downloadable</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">DB Update</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(236,72,153,0.4);color:var(--outpass)">S</div>
+            <div class="wf-content">
+              <div class="wf-title">Student downloads QR pass</div>
+              <div class="wf-desc">Scan at hostel gate; return logged on re-entry</div>
+              <span class="wf-tag" style="background:rgba(236,72,153,0.1);color:var(--outpass);border:1px solid rgba(236,72,153,0.2)">Student Action</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKS WORKFLOW -->
+    <div class="wf-card">
+      <div class="wf-head" style="border-left:3px solid var(--marks)">
+        <span class="wf-icon">📊</span> Marks Entry Workflow
+      </div>
+      <div class="wf-body">
+        <div class="wf-steps">
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(249,115,22,0.4);color:var(--admin)">A</div>
+            <div class="wf-content">
+              <div class="wf-title">Admin creates exam schedule</div>
+              <div class="wf-desc">Sets IA1/IA2/Mid/End exam for each subject + section</div>
+              <span class="wf-tag" style="background:rgba(249,115,22,0.1);color:var(--admin);border:1px solid rgba(249,115,22,0.2)">Admin Setup</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(139,92,246,0.4);color:var(--teacher)">T</div>
+            <div class="wf-content">
+              <div class="wf-title">Teacher enters marks per student</div>
+              <div class="wf-desc">Marks out of max, per subject, per exam type</div>
+              <span class="wf-tag" style="background:rgba(139,92,246,0.1);color:var(--teacher);border:1px solid rgba(139,92,246,0.2)">Teacher Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">⚙</div>
+            <div class="wf-content">
+              <div class="wf-title">System calculates grade & GPA</div>
+              <div class="wf-desc">Auto grade (O/A+/A…F), GPA + CGPA computation</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">Auto Calc</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(249,115,22,0.4);color:var(--admin)">A</div>
+            <div class="wf-content">
+              <div class="wf-title">Admin publishes results</div>
+              <div class="wf-desc">Marks become visible to students after publish</div>
+              <span class="wf-tag" style="background:rgba(249,115,22,0.1);color:var(--admin);border:1px solid rgba(249,115,22,0.2)">Admin Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(6,182,212,0.3);color:var(--student)">S</div>
+            <div class="wf-content">
+              <div class="wf-title">Student views marks & grade card</div>
+              <div class="wf-desc">Semester-wise breakdown, downloadable PDF</div>
+              <span class="wf-tag" style="background:rgba(6,182,212,0.08);color:var(--student);border:1px solid rgba(6,182,212,0.2)">Student View</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEAVE WORKFLOW -->
+    <div class="wf-card">
+      <div class="wf-head" style="border-left:3px solid var(--leave)">
+        <span class="wf-icon">📅</span> Leave Request Workflow
+      </div>
+      <div class="wf-body">
+        <div class="wf-steps">
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(20,184,166,0.4);color:var(--leave)">S</div>
+            <div class="wf-content">
+              <div class="wf-title">Student submits leave application</div>
+              <div class="wf-desc">Type (Medical/Casual/Emergency), dates, reason, doc upload</div>
+              <span class="wf-tag" style="background:rgba(20,184,166,0.1);color:var(--leave);border:1px solid rgba(20,184,166,0.2)">Student Action</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(139,92,246,0.4);color:var(--teacher)">T</div>
+            <div class="wf-content">
+              <div class="wf-title">Class teacher reviews & approves</div>
+              <div class="wf-desc">Level 1 approval — reviews docs, checks leave balance</div>
+              <span class="wf-tag" style="background:rgba(139,92,246,0.1);color:var(--teacher);border:1px solid rgba(139,92,246,0.2)">Teacher Approve</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:rgba(249,115,22,0.4);color:var(--admin)">H</div>
+            <div class="wf-content">
+              <div class="wf-title">HOD / Admin final approval</div>
+              <div class="wf-desc">Level 2 — required for &gt;2 day leaves</div>
+              <span class="wf-tag" style="background:rgba(249,115,22,0.1);color:var(--admin);border:1px solid rgba(249,115,22,0.2)">Admin Approve</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">🔄</div>
+            <div class="wf-content">
+              <div class="wf-title">Attendance auto-updated</div>
+              <div class="wf-desc">Approved leave days marked as "L" in attendance</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">Auto Sync</span>
+            </div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-dot" style="border-color:#334155;color:#64748b">📲</div>
+            <div class="wf-content">
+              <div class="wf-title">Student & parent notified</div>
+              <div class="wf-desc">Push + SMS on approve/reject with reason</div>
+              <span class="wf-tag" style="background:rgba(100,116,139,0.1);color:#64748b;border:1px solid #334155">Notify</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════ TAB 4: DATA INTERCONNECTIONS ══════ -->
+<div class="tab-content" id="tab-data">
+  <div class="slabel">How modules share & depend on each other's data</div>
+  <div class="interconnect">
+    <div class="ic-title">Module Dependency Map</div>
+
+    <!-- Visual interconnection grid -->
+    <div style="overflow-x:auto">
+      <svg width="100%" height="520" viewBox="0 0 900 520" style="min-width:700px;display:block;margin:0 auto">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#2a3347"/>
+          </marker>
+          <marker id="arr-att"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#10b981"/></marker>
+          <marker id="arr-marks" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6366f1"/></marker>
+          <marker id="arr-out"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#ec4899"/></marker>
+          <marker id="arr-leave" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#14b8a6"/></marker>
+          <marker id="arr-sec"   markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#84cc16"/></marker>
+          <marker id="arr-notif" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f97316"/></marker>
+        </defs>
+
+        <!-- ══ NODES ══ -->
+        <!-- Users (center-top) -->
+        <rect x="365" y="20" width="170" height="60" rx="6" fill="#0e1118" stroke="#334155" stroke-width="1.5"/>
+        <text x="450" y="44" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#e2e8f0">👤 USERS</text>
+        <text x="450" y="62" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Auth · Roles · Sessions</text>
+
+        <!-- Students -->
+        <rect x="365" y="140" width="170" height="60" rx="6" fill="#0e1118" stroke="rgba(6,182,212,0.4)" stroke-width="1.5"/>
+        <text x="450" y="164" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#06b6d4">📚 STUDENTS</text>
+        <text x="450" y="182" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Profile · Roll · Section</text>
+
+        <!-- Sections (left) -->
+        <rect x="60" y="140" width="160" height="60" rx="6" fill="#0e1118" stroke="rgba(132,204,22,0.3)" stroke-width="1.5"/>
+        <text x="140" y="164" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#84cc16">🏫 SECTIONS</text>
+        <text x="140" y="182" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Dept · Year · Class</text>
+
+        <!-- Teachers (right) -->
+        <rect x="680" y="140" width="160" height="60" rx="6" fill="#0e1118" stroke="rgba(139,92,246,0.3)" stroke-width="1.5"/>
+        <text x="760" y="164" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#8b5cf6">🎓 TEACHERS</text>
+        <text x="760" y="182" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Subject · Section map</text>
+
+        <!-- Attendance -->
+        <rect x="60" y="280" width="160" height="60" rx="6" fill="#0e1118" stroke="rgba(16,185,129,0.3)" stroke-width="1.5"/>
+        <text x="140" y="304" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#10b981">📋 ATTENDANCE</text>
+        <text x="140" y="322" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Student·Subject·Date</text>
+
+        <!-- Marks -->
+        <rect x="260" y="280" width="150" height="60" rx="6" fill="#0e1118" stroke="rgba(99,102,241,0.3)" stroke-width="1.5"/>
+        <text x="335" y="304" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#6366f1">📊 MARKS</text>
+        <text x="335" y="322" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">IA·Mid·End·Grade</text>
+
+        <!-- Leave -->
+        <rect x="450" y="280" width="150" height="60" rx="6" fill="#0e1118" stroke="rgba(20,184,166,0.3)" stroke-width="1.5"/>
+        <text x="525" y="304" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#14b8a6">📅 LEAVE</text>
+        <text x="525" y="322" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Request·Approve·Sync</text>
+
+        <!-- Hostel -->
+        <rect x="640" y="280" width="160" height="60" rx="6" fill="#0e1118" stroke="rgba(245,158,11,0.3)" stroke-width="1.5"/>
+        <text x="720" y="304" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#f59e0b">🏠 HOSTEL</text>
+        <text x="720" y="322" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Block·Room·Alloc</text>
+
+        <!-- Outpass -->
+        <rect x="640" y="400" width="160" height="60" rx="6" fill="#0e1118" stroke="rgba(236,72,153,0.3)" stroke-width="1.5"/>
+        <text x="720" y="424" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#ec4899">🚪 OUTPASS</text>
+        <text x="720" y="442" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Request·QR·Gate log</text>
+
+        <!-- Notifications -->
+        <rect x="260" y="420" width="330" height="55" rx="6" fill="#0e1118" stroke="rgba(249,115,22,0.3)" stroke-width="1.5"/>
+        <text x="425" y="444" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" fill="#f97316">🔔 NOTIFICATION ENGINE</text>
+        <text x="425" y="461" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="10" fill="#64748b">Email · SMS · Push → Student · Parent · Teacher</text>
+
+        <!-- ══ CONNECTIONS ══ -->
+        <!-- Users → Students -->
+        <line x1="450" y1="80" x2="450" y2="138" stroke="#334155" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,3"/>
+        <text x="455" y="112" font-family="JetBrains Mono,monospace" font-size="9" fill="#475569">1:1</text>
+
+        <!-- Users → Teachers -->
+        <line x1="535" y1="50" x2="678" y2="155" stroke="#334155" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,3"/>
+
+        <!-- Students → Sections -->
+        <line x1="365" y1="170" x2="222" y2="170" stroke="rgba(132,204,22,0.5)" stroke-width="1.5" marker-end="url(#arr-sec)"/>
+        <text x="280" y="163" font-family="JetBrains Mono,monospace" font-size="9" fill="#84cc16">belongs to</text>
+
+        <!-- Sections → Attendance -->
+        <line x1="140" y1="200" x2="140" y2="278" stroke="rgba(16,185,129,0.5)" stroke-width="1.5" marker-end="url(#arr-att)"/>
+
+        <!-- Students → Attendance -->
+        <line x1="380" y1="200" x2="215" y2="290" stroke="rgba(16,185,129,0.5)" stroke-width="1.5" marker-end="url(#arr-att)"/>
+        <text x="260" y="252" font-family="JetBrains Mono,monospace" font-size="9" fill="#10b981">records</text>
+
+        <!-- Students → Marks -->
+        <line x1="420" y1="200" x2="360" y2="278" stroke="rgba(99,102,241,0.5)" stroke-width="1.5" marker-end="url(#arr-marks)"/>
+        <text x="368" y="247" font-family="JetBrains Mono,monospace" font-size="9" fill="#6366f1">scores</text>
+
+        <!-- Students → Leave -->
+        <line x1="480" y1="200" x2="510" y2="278" stroke="rgba(20,184,166,0.5)" stroke-width="1.5" marker-end="url(#arr-leave)"/>
+        <text x="498" y="247" font-family="JetBrains Mono,monospace" font-size="9" fill="#14b8a6">requests</text>
+
+        <!-- Students → Hostel -->
+        <line x1="535" y1="200" x2="680" y2="285" stroke="rgba(245,158,11,0.5)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <text x="602" y="247" font-family="JetBrains Mono,monospace" font-size="9" fill="#f59e0b">resides</text>
+
+        <!-- Hostel → Outpass -->
+        <line x1="720" y1="340" x2="720" y2="398" stroke="rgba(236,72,153,0.5)" stroke-width="1.5" marker-end="url(#arr-out)"/>
+        <text x="725" y="372" font-family="JetBrains Mono,monospace" font-size="9" fill="#ec4899">generates</text>
+
+        <!-- Leave → Attendance (sync) -->
+        <path d="M 450 340 Q 300 370 220 340" stroke="rgba(20,184,166,0.4)" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#arr-leave)"/>
+        <text x="290" y="368" font-family="JetBrains Mono,monospace" font-size="9" fill="#14b8a6">auto-sync</text>
+
+        <!-- Teachers → Attendance -->
+        <line x1="680" y1="185" x2="222" y2="300" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+        <text x="390" y="235" font-family="JetBrains Mono,monospace" font-size="9" fill="#8b5cf6">marks</text>
+
+        <!-- Teachers → Marks -->
+        <line x1="680" y1="190" x2="412" y2="282" stroke="rgba(139,92,246,0.4)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+        <!-- Attendance → Notifications -->
+        <line x1="160" y1="340" x2="270" y2="430" stroke="rgba(249,115,22,0.4)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-notif)"/>
+
+        <!-- Leave → Notifications -->
+        <line x1="500" y1="340" x2="450" y2="418" stroke="rgba(249,115,22,0.4)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-notif)"/>
+
+        <!-- Outpass → Notifications -->
+        <line x1="680" y1="440" x2="592" y2="452" stroke="rgba(249,115,22,0.4)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-notif)"/>
+
+        <!-- Marks → Notifications -->
+        <line x1="380" y1="340" x2="390" y2="418" stroke="rgba(249,115,22,0.4)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-notif)"/>
+
+      </svg>
+    </div>
+
+    <!-- Key -->
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--muted)">── solid = direct FK relationship</div>
+      <div style="font-size:10px;color:var(--muted)">- - - dashed = action/write dependency</div>
+      <div style="font-size:10px;color:var(--muted)">🔔 all modules feed into the notification engine</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const ids = ['arch','roles','workflow','data'];
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + id);
+  });
+}
+</script>
+</body>
+</html>
