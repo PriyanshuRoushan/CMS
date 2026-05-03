@@ -5,14 +5,30 @@ import bcrypt from "bcrypt";
 export const login = async (req, res) => {
   const { email, password, loginType } = req.body;
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
-    .eq("email", email)
-    .single();
+    .eq("email", normalizedEmail)
+    .maybeSingle();
 
-  if (error || !user) {
-    return res.status(404).json({ msg: "User not found" });
+  if (error) {
+    return res.status(500).json({ msg: "Database error" });
+  }
+
+  // 🔐 Avoid user enumeration
+  if (!user) {
+    return res.status(401).json({ msg: "Invalid credentials" });
+  }
+
+  // 🔒 Account checks BEFORE password
+  if (user.is_deleted) {
+    return res.status(403).json({ msg: "Account deactivated" });
+  }
+
+  if (user.is_active === false) {
+    return res.status(403).json({ msg: "Account disabled" });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -20,7 +36,11 @@ export const login = async (req, res) => {
     return res.status(401).json({ msg: "Invalid credentials" });
   }
 
-  // ✅ PANEL VALIDATION
+  // ✅ Validate login type
+  if (!loginType) {
+    return res.status(400).json({ msg: "Login type required" });
+  }
+
   if (loginType === "student" && user.role !== "student") {
     return res.status(403).json({ msg: "Student login only" });
   }
