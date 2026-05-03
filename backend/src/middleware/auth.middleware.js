@@ -10,6 +10,7 @@
 
 import jwt from "jsonwebtoken";
 
+// VERIFY TOKEN
 export const verifyToken = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -23,6 +24,7 @@ export const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     req.user = decoded;
+
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
@@ -33,16 +35,38 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
-export const authorize = (roles) => {
+
+// AUTHORIZE ROLE
+export const authorize = (...roles) => {
   return (req, res, next) => {
     try {
-      if (!req.user || !roles.includes(req.user.role)) { // ✅ FIX
+      if (!req.user || !roles.includes(req.user.role)) {
         return res.status(403).json({ msg: "Access Denied" });
       }
 
-      next(); // ❗ you forgot this
+      next();
     } catch (error) {
       return res.status(500).json({ msg: "Authorization error" });
     }
   };
+};
+
+
+// SELF OR ADMIN
+export const authorizeSelfOrAdmin = (req, res, next) => {
+  try {
+    const userIdFromToken = req.user.id;
+    const userIdFromParams = req.params.id;
+
+    if (req.user.role === "admin" || userIdFromToken === userIdFromParams) {
+      return next();
+    }
+
+    return res.status(403).json({
+      msg: "Access denied: Not authorized"
+    });
+
+  } catch (error) {
+    return res.status(500).json({ msg: "Authorization error" });
+  }
 };
